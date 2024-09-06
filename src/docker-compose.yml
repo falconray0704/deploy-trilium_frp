@@ -1,0 +1,35 @@
+version: '3.6'
+services:
+  frps_trilium:
+    image: "rayruan/amd64_frp:${FRP_VERSION-0.60.0}"
+    container_name: "${SERVER_NAME:-frps_trilium}"
+    ports:
+      - "${FRPS_SERVER_IP}:${FRPS_BIND_PORT:-7003}:${FRPS_BIND_PORT:-7003}/udp"
+#    expose:
+#      - "${VIRTUAL_PORT:-8080}" 
+    environment:
+      PUID: 1000
+      PGID: 1000
+      HTTPS_METHOD: nohttps
+#      LETSENCRYPT_HOST: "${LETSENCRYPT_HOST:-bar.com}"
+      VIRTUAL_PORT: "${VIRTUAL_PORT:-8001}"
+      VIRTUAL_HOST: "${VIRTUAL_HOST:-foo.bar.com}"
+      VIRTUAL_PATH: "${VIRTUAL_PAHT:-/}"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+      - ${INSTALL_ROOT_PATH}/${SERVER_NAME}/${CFGS_DIR}/frps.toml:/etc/frp/frps.toml:ro
+      - ${INSTALL_ROOT_PATH}/${SERVER_NAME}/frps_entrypoint.sh:/app/frps_entrypoint.sh:ro
+      - ${INSTALL_ROOT_PATH}/${SERVER_NAME}/${CERTS_DIR}/server.crt:/server.crt:ro
+      - ${INSTALL_ROOT_PATH}/${SERVER_NAME}/${CERTS_DIR}/server.key:/server.key:ro
+      - ${INSTALL_ROOT_PATH}/${SERVER_NAME}/${CERTS_DIR}/rootCA.crt:/ca.crt:ro
+    entrypoint: /app/frps_entrypoint.sh
+    networks:
+      - "nginx-proxy"
+    restart: unless-stopped
+    
+networks:
+  nginx-proxy:
+    external: true
+    name: "nginx-proxy"
+
